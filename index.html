@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweetener To-Do & Notes</title>
+    <script src="script.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="app-title">📝 Sweetener Notes</div>
+        <button class="add-btn" onclick="createNewNote()">+ New Note</button>
+        <button class="add-btn" onclick="createNewTodo()">+ New To-Do</button>
+        
+        <div style="border-top: 1px solid rgba(219, 112, 147, 0.2); padding-top: 15px; margin-top: 10px;">
+            <button class="backup-btn" onclick="exportAllNotes()" title="Download all notes as Markdown">
+                📥 Backup All
+            </button>
+            <button class="backup-btn" onclick="exportCurrentNote()" title="Download current note" 
+                    id="exportCurrentBtn" style="display: none;">
+                💾 Export This
+            </button>
+        </div>
+        
+        <div class="notes-list" id="notesList"></div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="empty-state">
+            <h2>Welcome to your Notes & Tasks! ✨</h2>
+            <p>Create a new note or to-do list to get started</p>
+        </div>
+    </div>
+</body>
+</html>

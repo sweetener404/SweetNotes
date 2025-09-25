@@ -1,4 +1,4 @@
-let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
+        let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
         let currentNoteId = null;
 
         function generateId() {
@@ -17,6 +17,22 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
 
         function saveNotes() {
             localStorage.setItem('notesTodo', JSON.stringify(notes));
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            
+            sidebar.classList.toggle('sidebar-open');
+            body.classList.toggle('sidebar-overlay');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            
+            sidebar.classList.remove('sidebar-open');
+            body.classList.remove('sidebar-overlay');
         }
 
         function createNewNote() {
@@ -86,6 +102,11 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
             const exportBtn = document.getElementById('exportCurrentBtn');
             if (exportBtn) {
                 exportBtn.style.display = 'block';
+            }
+            
+            // Close sidebar on mobile after selecting a note
+            if (window.innerWidth <= 768) {
+                closeSidebar();
             }
         }
 
@@ -184,15 +205,18 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
             if (note.type === 'todo') {
                 mainContent.innerHTML = `
                     <div class="editor-header">
+                        <div class="editor-header-top">
+                            <button class="close-editor-btn" onclick="showDashboard()" title="Back to Dashboard">← Dashboard</button>
+                            <div class="header-controls">
+                                <select class="type-select" onchange="changeNoteType(this.value)">
+                                    <option value="note" ${note.type === 'note' ? 'selected' : ''}>📝 Note</option>
+                                    <option value="todo" ${note.type === 'todo' ? 'selected' : ''}>✓ To-Do</option>
+                                </select>
+                                <button class="delete-btn" onclick="deleteCurrentNote()">Delete</button>
+                            </div>
+                        </div>
                         <input type="text" class="title-input" value="${note.title}" 
                                onchange="updateNoteTitle(this.value)" placeholder="Enter title...">
-                        <div class="header-controls">
-                            <select class="type-select" onchange="changeNoteType(this.value)">
-                                <option value="note" ${note.type === 'note' ? 'selected' : ''}>📝 Note</option>
-                                <option value="todo" ${note.type === 'todo' ? 'selected' : ''}>✓ To-Do</option>
-                            </select>
-                            <button class="delete-btn" onclick="deleteCurrentNote()">Delete</button>
-                        </div>
                     </div>
                     
                     <div class="editor-container">
@@ -204,15 +228,18 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
             } else {
                 mainContent.innerHTML = `
                     <div class="editor-header">
+                        <div class="editor-header-top">
+                            <button class="close-editor-btn" onclick="showDashboard()" title="Back to Dashboard">← Dashboard</button>
+                            <div class="header-controls">
+                                <select class="type-select" onchange="changeNoteType(this.value)">
+                                    <option value="note" ${note.type === 'note' ? 'selected' : ''}>📝 Note</option>
+                                    <option value="todo" ${note.type === 'todo' ? 'selected' : ''}>✓ To-Do</option>
+                                </select>
+                                <button class="delete-btn" onclick="deleteCurrentNote()">Delete</button>
+                            </div>
+                        </div>
                         <input type="text" class="title-input" value="${note.title}" 
                                onchange="updateNoteTitle(this.value)" placeholder="Enter title...">
-                        <div class="header-controls">
-                            <select class="type-select" onchange="changeNoteType(this.value)">
-                                <option value="note" ${note.type === 'note' ? 'selected' : ''}>📝 Note</option>
-                                <option value="todo" ${note.type === 'todo' ? 'selected' : ''}>✓ To-Do</option>
-                            </select>
-                            <button class="delete-btn" onclick="deleteCurrentNote()">Delete</button>
-                        </div>
                     </div>
                     
                     <div class="editor-container">
@@ -333,25 +360,8 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
                 notes = notes.filter(n => n.id !== currentNoteId);
                 saveNotes();
                 
-                // Clear current selection
-                currentNoteId = null;
-                
-                // Update the UI
-                renderNotesList();
-                
-                // Show empty state or select another note
-                if (notes.length > 0) {
-                    // Auto-select the first remaining note
-                    selectNote(notes[0].id);
-                } else {
-                    // Show empty state
-                    document.getElementById('mainContent').innerHTML = `
-                        <div class="empty-state">
-                            <h2>Note deleted! 🗑️</h2>
-                            <p>Create a new note or select an existing one</p>
-                        </div>
-                    `;
-                }
+                // Always go back to dashboard after deleting
+                showDashboard();
             }
         }
 
@@ -360,13 +370,110 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
             // The individual update functions already handle saving, so this is mainly for safety
         }
 
+        function showDashboard() {
+            currentNoteId = null;
+            renderNotesList(); // Update sidebar to show no active note
+            
+            // Hide export current button
+            const exportBtn = document.getElementById('exportCurrentBtn');
+            if (exportBtn) {
+                exportBtn.style.display = 'none';
+            }
+            
+            // Show dashboard with stats
+            const totalNotes = notes.filter(n => n.type === 'note').length;
+            const totalTodos = notes.filter(n => n.type === 'todo').length;
+            const completedTasks = notes
+                .filter(n => n.type === 'todo')
+                .reduce((total, note) => total + (note.todos?.filter(todo => todo.completed).length || 0), 0);
+            const totalTasks = notes
+                .filter(n => n.type === 'todo')
+                .reduce((total, note) => total + (note.todos?.length || 0), 0);
+            
+            document.getElementById('mainContent').innerHTML = `
+                <div class="dashboard">
+                    <div class="dashboard-header">
+                        <h1>Welcome to Sweetener Notes! ✨</h1>
+                        <p>Your personal productivity space</p>
+                    </div>
+                    
+                    ${notes.length > 0 ? `
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-number">${totalNotes}</div>
+                            <div class="stat-label">📝 Notes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${totalTodos}</div>
+                            <div class="stat-label">✓ To-Do Lists</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${completedTasks}/${totalTasks}</div>
+                            <div class="stat-label">🎯 Tasks Done</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn primary" onclick="createNewNote()">
+                                📝 Create Note
+                            </button>
+                            <button class="action-btn secondary" onclick="createNewTodo()">
+                                ✓ Create To-Do
+                            </button>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="empty-dashboard">
+                        <div class="empty-icon">📋</div>
+                        <h2>Ready to get organized?</h2>
+                        <p>Create your first note or to-do list to get started!</p>
+                        <div class="action-buttons">
+                            <button class="action-btn primary" onclick="createNewNote()">
+                                📝 Create Your First Note
+                            </button>
+                            <button class="action-btn secondary" onclick="createNewTodo()">
+                                ✓ Create Your First To-Do
+                            </button>
+                        </div>
+                    </div>
+                    `}
+                </div>
+            `;
+        }
+
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
             renderNotesList();
             
-            if (notes.length > 0) {
-                selectNote(notes[0].id);
-            }
+            // Always show dashboard/welcome screen on load
+            showDashboard();
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                const sidebar = document.getElementById('sidebar');
+                const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+                
+                if (window.innerWidth <= 768 && 
+                    sidebar.classList.contains('sidebar-open') && 
+                    !sidebar.contains(e.target) && 
+                    !mobileMenuBtn.contains(e.target)) {
+                    closeSidebar();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const sidebar = document.getElementById('sidebar');
+                const body = document.body;
+                
+                if (window.innerWidth > 768) {
+                    // Desktop mode: always show sidebar, remove mobile classes
+                    sidebar.classList.remove('sidebar-open');
+                    body.classList.remove('sidebar-overlay');
+                }
+            });
         });
 
         // Auto-save functionality
@@ -377,44 +484,4 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
                     saveNotes();
                 }
             }
-
-                function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const body = document.body;
-            
-            sidebar.classList.toggle('sidebar-open');
-            body.classList.toggle('sidebar-overlay');
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const body = document.body;
-            
-            sidebar.classList.remove('sidebar-open');
-            body.classList.remove('sidebar-overlay');
-        }
-
-        function selectNote(noteId) {
-            if (currentNoteId) {
-                saveCurrentNote();
-            }
-            
-            currentNoteId = noteId;
-            const note = notes.find(n => n.id === noteId);
-            if (!note) return;
-
-            renderNotesList();
-            renderNoteEditor(note);
-            
-            // Show/hide export current button
-            const exportBtn = document.getElementById('exportCurrentBtn');
-            if (exportBtn) {
-                exportBtn.style.display = 'block';
-            }
-            
-            // Close sidebar on mobile after selecting a note
-            if (window.innerWidth <= 768) {
-                closeSidebar();
-            }
-        }
         }, 5000); // Auto-save every 5 seconds

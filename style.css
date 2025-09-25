@@ -1,8 +1,10 @@
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,7 +14,8 @@ body {
     flex-direction: column;
 }
 
-/* Auth Screen Styles */
+
+/* Auth Screen Style */
 .auth-screen {
     display: flex;
     justify-content: center;

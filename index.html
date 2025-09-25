@@ -9,43 +9,77 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
-    <div class="mobile-header">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-        <div class="mobile-title">📝 Sweetener Notes</div>
-        <div class="mobile-spacer"></div>
+    <!-- Auth Screen -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-title">📝 Sweetener Notes</div>
+            <div class="auth-subtitle">Sync your notes across all devices</div>
+            
+            <div id="authForm" class="auth-form">
+                <input type="email" id="email" class="auth-input" placeholder="Email" required>
+                <input type="password" id="password" class="auth-input" placeholder="Password" required>
+                <button id="authButton" class="auth-button">Sign In</button>
+                <div id="authError" class="auth-error" style="display: none;"></div>
+            </div>
+            
+            <div class="auth-toggle">
+                <span id="authToggleText">Don't have an account?</span>
+                <span id="authToggleLink" class="auth-link">Sign Up</span>
+            </div>
+        </div>
     </div>
 
-    <div class="desktop-container">
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="app-title">📝 Sweetener Notes</div>
-                <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
+    <!-- Main App -->
+    <div id="mainApp" class="main-app">
+        <!-- User Info Bar -->
+        <div class="user-info">
+            <div>
+                Welcome back! <span id="userEmail" class="user-email"></span>
             </div>
-            <button class="add-btn" onclick="createNewNote()">+ New Note</button>
-            <button class="add-btn" onclick="createNewTodo()">+ New To-Do</button>
-            
-            <div style="border-top: 1px solid rgba(219, 112, 147, 0.2); padding-top: 15px; margin-top: 10px;">
-                <button class="backup-btn" onclick="exportAllNotes()" title="Download all notes as Markdown">
-                    📥 Backup All
-                </button>
-                <button class="backup-btn" onclick="exportCurrentNote()" title="Download current note" 
-                        id="exportCurrentBtn" style="display: none;">
-                    💾 Export This
-                </button>
-            </div>
-            
-            <div class="notes-list" id="notesList"></div>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
         </div>
 
-        <div class="main-content" id="mainContent">
-            <div class="empty-state">
-                <h2>Welcome to your Notes & Tasks! ✨</h2>
-                <p>Create a new note or to-do list to get started</p>
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+            <div class="mobile-title">📝 Sweetener Notes</div>
+            <div class="mobile-spacer"></div>
+        </div>
+
+        <!-- Desktop Container -->
+        <div class="desktop-container">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="app-title">📝 Sweetener Notes</div>
+                    <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
+                </div>
+                <button class="add-btn" onclick="createNewNote()">+ New Note</button>
+                <button class="add-btn" onclick="createNewTodo()">+ New To-Do</button>
+                
+                <div style="border-top: 1px solid rgba(219, 112, 147, 0.2); padding-top: 15px; margin-top: 10px;">
+                    <button class="backup-btn" onclick="exportAllNotes()" title="Download all notes as Markdown">
+                        📥 Backup All
+                    </button>
+                    <button class="backup-btn" onclick="exportCurrentNote()" title="Download current note" 
+                            id="exportCurrentBtn" style="display: none;">
+                        💾 Export This
+                    </button>
+                </div>
+                
+                <div class="notes-list" id="notesList"></div>
+            </div>
+
+            <div class="main-content" id="mainContent">
+                <div class="empty-state">
+                    <h2>Welcome to your Notes & Tasks! ✨</h2>
+                    <p>Create a new note or to-do list to get started</p>
+                </div>
             </div>
         </div>
     </div>
 </body>
 </html>
+
 
 
 

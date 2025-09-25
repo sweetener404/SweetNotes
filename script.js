@@ -1,6 +1,178 @@
-        let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
-        let currentNoteId = null;
+// Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWIE1bWqQ3f7PJpdEO6wEh5awmhuSBJ_o",
+            authDomain: "sweetener-notes.firebaseapp.com",
+            projectId: "sweetener-notes",
+            storageBucket: "sweetener-notes.firebasestorage.app",
+            messagingSenderId: "512242221851",
+            appId: "1:512242221851:web:7f998b14eef56ae8ca49be"
+        };
 
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Global variables
+        let notes = [];
+        let currentNoteId = null;
+        let currentUser = null;
+        let isSignUp = false;
+
+        // Auth State Management
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                document.getElementById('userEmail').textContent = user.email;
+                loadUserNotes();
+            } else {
+                currentUser = null;
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+                notes = [];
+            }
+        });
+
+        // Auth Form Handling
+        document.getElementById('authButton').addEventListener('click', handleAuth);
+        document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
+        document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
+
+        // Enter key support for auth form
+        document.getElementById('email').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAuth();
+        });
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAuth();
+        });
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            const authButton = document.getElementById('authButton');
+            const authToggleText = document.getElementById('authToggleText');
+            const authToggleLink = document.getElementById('authToggleLink');
+            
+            if (isSignUp) {
+                authButton.textContent = 'Sign Up';
+                authToggleText.textContent = 'Already have an account?';
+                authToggleLink.textContent = 'Sign In';
+            } else {
+                authButton.textContent = 'Sign In';
+                authToggleText.textContent = "Don't have an account?";
+                authToggleLink.textContent = 'Sign Up';
+            }
+            
+            hideAuthError();
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const authButton = document.getElementById('authButton');
+            
+            if (!email || !password) {
+                showAuthError('Please enter both email and password');
+                return;
+            }
+
+            authButton.disabled = true;
+            authButton.textContent = 'Loading...';
+            hideAuthError();
+
+            try {
+                if (isSignUp) {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+            } catch (error) {
+                showAuthError(getAuthErrorMessage(error.code));
+                authButton.disabled = false;
+                authButton.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+            }
+        }
+
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideAuthError() {
+            document.getElementById('authError').style.display = 'none';
+        }
+
+        function getAuthErrorMessage(errorCode) {
+            switch (errorCode) {
+                case 'auth/user-not-found':
+                    return 'No account found with this email address';
+                case 'auth/wrong-password':
+                    return 'Incorrect password';
+                case 'auth/email-already-in-use':
+                    return 'An account with this email already exists';
+                case 'auth/weak-password':
+                    return 'Password should be at least 6 characters';
+                case 'auth/invalid-email':
+                    return 'Please enter a valid email address';
+                default:
+                    return 'An error occurred. Please try again.';
+            }
+        }
+
+        // Firestore Functions
+        async function loadUserNotes() {
+            if (!currentUser) return;
+            
+            try {
+                const snapshot = await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('notes')
+                    .orderBy('dateModified', 'desc')
+                    .get();
+                
+                notes = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                renderNotesList();
+                showDashboard();
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        async function saveNoteToFirestore(note) {
+            if (!currentUser) return;
+            
+            try {
+                await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('notes')
+                    .doc(note.id)
+                    .set(note);
+            } catch (error) {
+                console.error('Error saving note:', error);
+            }
+        }
+
+        async function deleteNoteFromFirestore(noteId) {
+            if (!currentUser) return;
+            
+            try {
+                await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('notes')
+                    .doc(noteId)
+                    .delete();
+            } catch (error) {
+                console.error('Error deleting note:', error);
+            }
+        }
+
+        // Note Management Functions (Updated for Firebase)
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
@@ -15,27 +187,7 @@
             });
         }
 
-        function saveNotes() {
-            localStorage.setItem('notesTodo', JSON.stringify(notes));
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const body = document.body;
-            
-            sidebar.classList.toggle('sidebar-open');
-            body.classList.toggle('sidebar-overlay');
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const body = document.body;
-            
-            sidebar.classList.remove('sidebar-open');
-            body.classList.remove('sidebar-overlay');
-        }
-
-        function createNewNote() {
+        async function createNewNote() {
             const newNote = {
                 id: generateId(),
                 title: 'Untitled Note',
@@ -46,12 +198,12 @@
             };
             
             notes.unshift(newNote);
-            saveNotes();
+            await saveNoteToFirestore(newNote);
             renderNotesList();
             selectNote(newNote.id);
         }
 
-        function createNewTodo() {
+        async function createNewTodo() {
             const newTodo = {
                 id: generateId(),
                 title: 'New To-Do List',
@@ -62,7 +214,7 @@
             };
             
             notes.unshift(newTodo);
-            saveNotes();
+            await saveNoteToFirestore(newTodo);
             renderNotesList();
             selectNote(newTodo.id);
         }
@@ -98,105 +250,85 @@
             renderNotesList();
             renderNoteEditor(note);
             
-            // Show/hide export current button
             const exportBtn = document.getElementById('exportCurrentBtn');
             if (exportBtn) {
                 exportBtn.style.display = 'block';
             }
             
-            // Close sidebar on mobile after selecting a note
             if (window.innerWidth <= 768) {
                 closeSidebar();
             }
         }
 
-        function formatNoteForExport(note) {
-            let content = '';
+        function showDashboard() {
+            currentNoteId = null;
+            renderNotesList();
             
-            // Add title
-            content += `# ${note.title}\n\n`;
-            
-            // Add metadata
-            content += `**Type:** ${note.type === 'todo' ? 'To-Do List' : 'Note'}  \n`;
-            content += `**Last Modified:** ${formatDate(note.dateModified)}  \n\n`;
-            
-            // Add content based on type
-            if (note.type === 'todo') {
-                if (note.todos && note.todos.length > 0) {
-                    content += '## Tasks\n\n';
-                    note.todos.forEach(todo => {
-                        const checkbox = todo.completed ? '[x]' : '[ ]';
-                        content += `- ${checkbox} ${todo.text || 'Untitled task'}\n`;
-                    });
-                } else {
-                    content += '*No tasks added yet*\n';
-                }
-                
-                if (note.content && note.content.trim()) {
-                    content += '\n## Additional Notes\n\n';
-                    content += note.content;
-                }
-            } else {
-                if (note.content && note.content.trim()) {
-                    content += note.content;
-                } else {
-                    content += '*No content added yet*';
-                }
+            const exportBtn = document.getElementById('exportCurrentBtn');
+            if (exportBtn) {
+                exportBtn.style.display = 'none';
             }
             
-            return content + '\n\n---\n\n';
-        }
-
-        function downloadFile(content, filename) {
-            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-
-        function exportAllNotes() {
-            if (notes.length === 0) {
-                alert('No notes to export! Create some notes first.');
-                return;
-            }
+            const totalNotes = notes.filter(n => n.type === 'note').length;
+            const totalTodos = notes.filter(n => n.type === 'todo').length;
+            const completedTasks = notes
+                .filter(n => n.type === 'todo')
+                .reduce((total, note) => total + (note.todos?.filter(todo => todo.completed).length || 0), 0);
+            const totalTasks = notes
+                .filter(n => n.type === 'todo')
+                .reduce((total, note) => total + (note.todos?.length || 0), 0);
             
-            let content = `# My Notes & Tasks Backup\n\n`;
-            content += `Exported on: ${new Date().toLocaleString()}\n`;
-            content += `Total items: ${notes.length}\n\n`;
-            content += `---\n\n`;
-            
-            // Sort notes by date (newest first)
-            const sortedNotes = [...notes].sort((a, b) => new Date(b.dateModified) - new Date(a.dateModified));
-            
-            sortedNotes.forEach(note => {
-                content += formatNoteForExport(note);
-            });
-            
-            const timestamp = new Date().toISOString().split('T')[0];
-            downloadFile(content, `notes-backup-${timestamp}.md`);
-        }
-
-        function exportCurrentNote() {
-            if (!currentNoteId) {
-                alert('No note selected to export!');
-                return;
-            }
-            
-            const note = notes.find(n => n.id === currentNoteId);
-            if (!note) {
-                alert('Selected note not found!');
-                return;
-            }
-            
-            const content = formatNoteForExport(note);
-            const safeTitle = note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            const timestamp = new Date().toISOString().split('T')[0];
-            downloadFile(content, `${safeTitle}-${timestamp}.md`);
+            document.getElementById('mainContent').innerHTML = `
+                <div class="dashboard">
+                    <div class="dashboard-header">
+                        <h1>Welcome to Sweetener Notes! ✨</h1>
+                        <p>Your personal productivity space</p>
+                    </div>
+                    
+                    ${notes.length > 0 ? `
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-number">${totalNotes}</div>
+                            <div class="stat-label">📝 Notes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${totalTodos}</div>
+                            <div class="stat-label">✓ To-Do Lists</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${completedTasks}/${totalTasks}</div>
+                            <div class="stat-label">🎯 Tasks Done</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn primary" onclick="createNewNote()">
+                                📝 Create Note
+                            </button>
+                            <button class="action-btn secondary" onclick="createNewTodo()">
+                                ✓ Create To-Do
+                            </button>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="empty-dashboard">
+                        <div class="empty-icon">📋</div>
+                        <h2>Ready to get organized?</h2>
+                        <p>Create your first note or to-do list to get started!</p>
+                        <div class="action-buttons">
+                            <button class="action-btn primary" onclick="createNewNote()">
+                                📝 Create Your First Note
+                            </button>
+                            <button class="action-btn secondary" onclick="createNewTodo()">
+                                ✓ Create Your First To-Do
+                            </button>
+                        </div>
+                    </div>
+                    `}
+                </div>
+            `;
         }
 
         function renderNoteEditor(note) {
@@ -269,187 +401,201 @@
             });
         }
 
-        function addTodoItem() {
+        async function addTodoItem() {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.todos.push({ text: '', completed: false });
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderTodoList(note);
             renderNotesList();
         }
 
-        function toggleTodo(index) {
+        async function toggleTodo(index) {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.todos[index].completed = !note.todos[index].completed;
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderTodoList(note);
             renderNotesList();
         }
 
-        function updateTodoText(index, text) {
+        async function updateTodoText(index, text) {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.todos[index].text = text;
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderNotesList();
         }
 
-        function deleteTodo(index) {
+        async function deleteTodo(index) {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.todos.splice(index, 1);
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderTodoList(note);
             renderNotesList();
         }
 
-        function updateNoteTitle(title) {
+        async function updateNoteTitle(title) {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.title = title;
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderNotesList();
         }
 
-        function updateNoteContent(content) {
+        async function updateNoteContent(content) {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.content = content;
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderNotesList();
         }
 
-        function changeNoteType(type) {
+        async function changeNoteType(type) {
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
 
             note.type = type;
             note.dateModified = new Date().toISOString();
-            saveNotes();
+            await saveNoteToFirestore(note);
             renderNoteEditor(note);
             renderNotesList();
         }
 
-        function deleteCurrentNote() {
-            if (!currentNoteId) {
-                console.log('No current note selected');
-                return;
-            }
+        async function deleteCurrentNote() {
+            if (!currentNoteId) return;
             
             const noteToDelete = notes.find(n => n.id === currentNoteId);
-            if (!noteToDelete) {
-                console.log('Note not found');
-                return;
-            }
+            if (!noteToDelete) return;
             
             if (confirm(`Are you sure you want to delete "${noteToDelete.title}"?`)) {
-                // Filter out the current note
                 notes = notes.filter(n => n.id !== currentNoteId);
-                saveNotes();
-                
-                // Always go back to dashboard after deleting
+                await deleteNoteFromFirestore(currentNoteId);
                 showDashboard();
             }
         }
 
         function saveCurrentNote() {
-            // This function is called when switching between notes to ensure current changes are saved
-            // The individual update functions already handle saving, so this is mainly for safety
+            // Auto-save is handled by individual update functions
         }
 
-        function showDashboard() {
-            currentNoteId = null;
-            renderNotesList(); // Update sidebar to show no active note
+        // Export functions (unchanged)
+        function formatNoteForExport(note) {
+            let content = '';
             
-            // Hide export current button
-            const exportBtn = document.getElementById('exportCurrentBtn');
-            if (exportBtn) {
-                exportBtn.style.display = 'none';
+            content += `# ${note.title}\n\n`;
+            content += `**Type:** ${note.type === 'todo' ? 'To-Do List' : 'Note'}  \n`;
+            content += `**Last Modified:** ${formatDate(note.dateModified)}  \n\n`;
+            
+            if (note.type === 'todo') {
+                if (note.todos && note.todos.length > 0) {
+                    content += '## Tasks\n\n';
+                    note.todos.forEach(todo => {
+                        const checkbox = todo.completed ? '[x]' : '[ ]';
+                        content += `- ${checkbox} ${todo.text || 'Untitled task'}\n`;
+                    });
+                } else {
+                    content += '*No tasks added yet*\n';
+                }
+                
+                if (note.content && note.content.trim()) {
+                    content += '\n## Additional Notes\n\n';
+                    content += note.content;
+                }
+            } else {
+                if (note.content && note.content.trim()) {
+                    content += note.content;
+                } else {
+                    content += '*No content added yet*';
+                }
             }
             
-            // Show dashboard with stats
-            const totalNotes = notes.filter(n => n.type === 'note').length;
-            const totalTodos = notes.filter(n => n.type === 'todo').length;
-            const completedTasks = notes
-                .filter(n => n.type === 'todo')
-                .reduce((total, note) => total + (note.todos?.filter(todo => todo.completed).length || 0), 0);
-            const totalTasks = notes
-                .filter(n => n.type === 'todo')
-                .reduce((total, note) => total + (note.todos?.length || 0), 0);
-            
-            document.getElementById('mainContent').innerHTML = `
-                <div class="dashboard">
-                    <div class="dashboard-header">
-                        <h1>Welcome to Sweetener Notes! ✨</h1>
-                        <p>Your personal productivity space</p>
-                    </div>
-                    
-                    ${notes.length > 0 ? `
-                    <div class="dashboard-stats">
-                        <div class="stat-card">
-                            <div class="stat-number">${totalNotes}</div>
-                            <div class="stat-label">📝 Notes</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${totalTodos}</div>
-                            <div class="stat-label">✓ To-Do Lists</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${completedTasks}/${totalTasks}</div>
-                            <div class="stat-label">🎯 Tasks Done</div>
-                        </div>
-                    </div>
-                    
-                    <div class="dashboard-actions">
-                        <h3>Quick Actions</h3>
-                        <div class="action-buttons">
-                            <button class="action-btn primary" onclick="createNewNote()">
-                                📝 Create Note
-                            </button>
-                            <button class="action-btn secondary" onclick="createNewTodo()">
-                                ✓ Create To-Do
-                            </button>
-                        </div>
-                    </div>
-                    ` : `
-                    <div class="empty-dashboard">
-                        <div class="empty-icon">📋</div>
-                        <h2>Ready to get organized?</h2>
-                        <p>Create your first note or to-do list to get started!</p>
-                        <div class="action-buttons">
-                            <button class="action-btn primary" onclick="createNewNote()">
-                                📝 Create Your First Note
-                            </button>
-                            <button class="action-btn secondary" onclick="createNewTodo()">
-                                ✓ Create Your First To-Do
-                            </button>
-                        </div>
-                    </div>
-                    `}
-                </div>
-            `;
+            return content + '\n\n---\n\n';
         }
 
-        // Initialize the app
+        function downloadFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportAllNotes() {
+            if (notes.length === 0) {
+                alert('No notes to export! Create some notes first.');
+                return;
+            }
+            
+            let content = `# My Notes & Tasks Backup\n\n`;
+            content += `Exported on: ${new Date().toLocaleString()}\n`;
+            content += `Total items: ${notes.length}\n\n`;
+            content += `---\n\n`;
+            
+            const sortedNotes = [...notes].sort((a, b) => new Date(b.dateModified) - new Date(a.dateModified));
+            
+            sortedNotes.forEach(note => {
+                content += formatNoteForExport(note);
+            });
+            
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadFile(content, `notes-backup-${timestamp}.md`);
+        }
+
+        function exportCurrentNote() {
+            if (!currentNoteId) {
+                alert('No note selected to export!');
+                return;
+            }
+            
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) {
+                alert('Selected note not found!');
+                return;
+            }
+            
+            const content = formatNoteForExport(note);
+            const safeTitle = note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadFile(content, `${safeTitle}-${timestamp}.md`);
+        }
+
+        // Mobile navigation functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            
+            sidebar.classList.toggle('sidebar-open');
+            body.classList.toggle('sidebar-overlay');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            
+            sidebar.classList.remove('sidebar-open');
+            body.classList.remove('sidebar-overlay');
+        }
+
+        // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            renderNotesList();
-            
-            // Always show dashboard/welcome screen on load
-            showDashboard();
-            
             // Close sidebar when clicking outside on mobile
             document.addEventListener('click', function(e) {
                 const sidebar = document.getElementById('sidebar');
@@ -469,19 +615,8 @@
                 const body = document.body;
                 
                 if (window.innerWidth > 768) {
-                    // Desktop mode: always show sidebar, remove mobile classes
                     sidebar.classList.remove('sidebar-open');
                     body.classList.remove('sidebar-overlay');
                 }
             });
         });
-
-        // Auto-save functionality
-        setInterval(() => {
-            if (currentNoteId) {
-                const note = notes.find(n => n.id === currentNoteId);
-                if (note) {
-                    saveNotes();
-                }
-            }
-        }, 5000); // Auto-save every 5 seconds

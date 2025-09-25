@@ -8,20 +8,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="app-title">📝 Sweetener Notes</div>
+    <div class="mobile-header">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="mobile-title">📝 Sweetener Notes</div>
+        <div class="mobile-spacer"></div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">📝 Sweetener Notes</div>
+            <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
+        </div>
         <button class="add-btn" onclick="createNewNote()">+ New Note</button>
         <button class="add-btn" onclick="createNewTodo()">+ New To-Do</button>
-        
-        <div style="border-top: 1px solid rgba(219, 112, 147, 0.2); padding-top: 15px; margin-top: 10px;">
-            <button class="backup-btn" onclick="exportAllNotes()" title="Download all notes as Markdown">
-                📥 Backup All
-            </button>
-            <button class="backup-btn" onclick="exportCurrentNote()" title="Download current note" 
-                    id="exportCurrentBtn" style="display: none;">
-                💾 Export This
-            </button>
-        </div>
         
         <div class="notes-list" id="notesList"></div>
     </div>

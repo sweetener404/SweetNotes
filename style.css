@@ -134,7 +134,7 @@ body {
     background: rgba(45, 27, 51, 0.9);
     backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(219, 112, 147, 0.2);
-    padding: 10px 20px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -142,8 +142,41 @@ body {
     font-size: 14px;
 }
 
-.user-email {
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #c2185b, #ad1457);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: #f7d7da;
+    border: 2px solid rgba(219, 112, 147, 0.3);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-welcome {
+    font-size: 12px;
     color: #d6a2ad;
+    margin-bottom: 2px;
+}
+
+.user-email {
+    color: #f7d7da;
+    font-weight: 500;
+    font-size: 13px;
 }
 
 .logout-btn {

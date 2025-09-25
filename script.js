@@ -1,5 +1,3 @@
-
-
 // Your Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDWIE1bWqQ3f7PJpdEO6wEh5awmhuSBJ_o",
@@ -15,7 +13,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-
 // Global variables
 let notes = [];
 let currentNoteId = null;
@@ -28,7 +25,21 @@ auth.onAuthStateChanged((user) => {
         currentUser = user;
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
-        document.getElementById('userEmail').textContent = user.email;
+        
+        // Set user email and avatar
+        const userEmailElement = document.getElementById('userEmail');
+        const userAvatarElement = document.getElementById('userAvatar');
+        
+        if (userEmailElement) {
+            userEmailElement.textContent = user.email;
+        }
+        
+        if (userAvatarElement) {
+            // Create avatar from first letter of email
+            const firstLetter = user.email.charAt(0).toUpperCase();
+            userAvatarElement.textContent = firstLetter;
+        }
+        
         loadUserNotes();
     } else {
         currentUser = null;

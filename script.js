@@ -206,7 +206,7 @@
                 mainContent.innerHTML = `
                     <div class="editor-header">
                         <div class="editor-header-top">
-                            <button class="close-editor-btn" onclick="showDashboard()" title="Back to Dashboard">← Dashboard</button>
+                            <button class="close-editor-btn" onclick="showDashboard()" title="Back to Dashboard">< Dashboard</button>
                             <div class="header-controls">
                                 <select class="type-select" onchange="changeNoteType(this.value)">
                                     <option value="note" ${note.type === 'note' ? 'selected' : ''}>📝 Note</option>

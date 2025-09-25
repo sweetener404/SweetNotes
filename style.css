@@ -333,3 +333,103 @@ body {
     text-decoration: line-through;
     opacity: 0.6;
 }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #2d1b33 0%, #1a0f1d 50%, #2d1b33 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Header */
+.mobile-header {
+    display: none;
+    background: rgba(45, 27, 51, 0.95);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(219, 112, 147, 0.3);
+    padding: 15px 20px;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-menu-btn {
+    background: linear-gradient(135deg, #c2185b, #ad1457);
+    color: #f7d7da;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s;
+    border: 1px solid rgba(219, 112, 147, 0.3);
+}
+
+.mobile-menu-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(194, 24, 91, 0.4);
+}
+
+.mobile-title {
+    color: #f7d7da;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-spacer {
+    width: 45px; /* Same width as menu button for centering */
+}
+
+/* Desktop Container */
+.desktop-container {
+    display: flex;
+    flex: 1;
+}
+
+.sidebar {
+    width: 300px;
+    background: rgba(45, 27, 51, 0.85);
+    backdrop-filter: blur(15px);
+    border-radius: 0 20px 20px 0;
+    border: 1px solid rgba(219, 112, 147, 0.2);
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(219, 112, 147, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 100;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-sidebar-btn {
+    display: none;
+    background: rgba(211, 47, 47, 0.8);
+    color: #f7d7da;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.2s;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-sidebar-btn:hover {
+    background: rgba(244, 67, 54, 0.9);
+    transform: scale(1.1);
+}

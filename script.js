@@ -377,4 +377,44 @@ let notes = JSON.parse(localStorage.getItem('notesTodo') || '[]');
                     saveNotes();
                 }
             }
+
+                function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            
+            sidebar.classList.toggle('sidebar-open');
+            body.classList.toggle('sidebar-overlay');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            
+            sidebar.classList.remove('sidebar-open');
+            body.classList.remove('sidebar-overlay');
+        }
+
+        function selectNote(noteId) {
+            if (currentNoteId) {
+                saveCurrentNote();
+            }
+            
+            currentNoteId = noteId;
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            renderNotesList();
+            renderNoteEditor(note);
+            
+            // Show/hide export current button
+            const exportBtn = document.getElementById('exportCurrentBtn');
+            if (exportBtn) {
+                exportBtn.style.display = 'block';
+            }
+            
+            // Close sidebar on mobile after selecting a note
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        }
         }, 5000); // Auto-save every 5 seconds

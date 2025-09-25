@@ -1,3 +1,5 @@
+
+
 // Your Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDWIE1bWqQ3f7PJpdEO6wEh5awmhuSBJ_o",
@@ -12,6 +14,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
 
 // Global variables
 let notes = [];

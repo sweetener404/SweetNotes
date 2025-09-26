@@ -1,4 +1,5 @@
 // Your Firebase configuration
+
 const firebaseConfig = {
     apiKey: "AIzaSyDWIE1bWqQ3f7PJpdEO6wEh5awmhuSBJ_o",
     authDomain: "sweetener-notes.firebaseapp.com",
@@ -27,17 +28,17 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('mainApp').style.display = 'flex';
         
         // Set user email and avatar
-        const userEmailElement = document.getElementById('userEmail');
-        const userAvatarElement = document.getElementById('userAvatar');
+        const profileEmailElement = document.getElementById('profileEmail');
+        const navAvatarElement = document.getElementById('navAvatar');
         
-        if (userEmailElement) {
-            userEmailElement.textContent = user.email;
+        if (profileEmailElement) {
+            profileEmailElement.textContent = user.email;
         }
         
-        if (userAvatarElement) {
+        if (navAvatarElement) {
             // Create avatar from first letter of email
             const firstLetter = user.email.charAt(0).toUpperCase();
-            userAvatarElement.textContent = firstLetter;
+            navAvatarElement.textContent = firstLetter;
         }
         
         loadUserNotes();
@@ -656,17 +657,43 @@ function closeSidebar() {
     }
 }
 
+// Profile dropdown functionality
+function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profileDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+}
+
+// Close dropdown when clicking outside
+function closeProfileDropdown() {
+    const dropdown = document.getElementById('profileDropdown');
+    if (dropdown && dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+    }
+}
+
 function setupMobileNavigation() {
     // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(e) {
         const sidebar = document.getElementById('sidebar');
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const navHamburger = document.querySelector('.nav-hamburger');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const navAvatar = document.getElementById('navAvatar');
         
+        // Close sidebar on mobile
         if (window.innerWidth <= 768 && 
             sidebar && sidebar.classList.contains('sidebar-open') && 
             !sidebar.contains(e.target) && 
-            mobileMenuBtn && !mobileMenuBtn.contains(e.target)) {
+            navHamburger && !navHamburger.contains(e.target)) {
             closeSidebar();
+        }
+        
+        // Close profile dropdown when clicking outside
+        if (profileDropdown && navAvatar && 
+            !profileDropdown.contains(e.target) && 
+            !navAvatar.contains(e.target)) {
+            closeProfileDropdown();
         }
     });
     

@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sweetener To-Do & Notes</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-
+    
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Auth Screen -->
@@ -34,23 +37,26 @@
 
     <!-- Main App -->
     <div id="mainApp" class="main-app">
-        <!-- User Info Bar -->
-        <div class="user-info">
-            <div class="user-profile">
-                <div class="user-avatar" id="userAvatar"></div>
-                <div class="user-details">
-                    <div class="user-welcome">Welcome back!</div>
-                    <div class="user-email" id="userEmail"></div>
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <div class="nav-left">
+                <button class="nav-hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="nav-title">📝 Sweetener Notes</div>
+            </div>
+            <div class="nav-profile">
+                <div class="nav-avatar" id="navAvatar" onclick="toggleProfileDropdown()"></div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="profile-info">
+                        <div class="profile-name">Welcome back!</div>
+                        <div class="profile-email" id="profileEmail"></div>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="profile-logout" id="profileLogout" onclick="auth.signOut()">
+                            🚪 Logout
+                        </button>
+                    </div>
                 </div>
             </div>
-            <button id="logoutBtn" class="logout-btn">Logout</button>
-        </div>
-
-        <!-- Mobile Header -->
-        <div class="mobile-header">
-            <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-            <div class="mobile-title">📝 Sweetener Notes</div>
-            <div class="mobile-spacer"></div>
         </div>
 
         <!-- Desktop Container -->
@@ -89,5 +95,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
